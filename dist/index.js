@@ -10,15 +10,27 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
+  if ((from && typeof from === "object") || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
       if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+        __defProp(to, key, {
+          get: () => from[key],
+          enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable,
+        });
   }
   return to;
 };
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var __toESM = (mod, isNodeMode, target) => (
+  (target = mod != null ? __create(__getProtoOf(mod)) : {}),
+  __copyProps(
+    isNodeMode || !mod || !mod.__esModule
+      ? __defProp(target, "default", { value: mod, enumerable: true })
+      : target,
+    mod
+  )
+);
+var __toCommonJS = (mod) =>
+  __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // src/index.ts
 var src_exports = {};
@@ -26,7 +38,7 @@ __export(src_exports, {
   default: () => src_default,
   defineConfig: () => defineConfig,
   getConfig: () => getConfig,
-  run: () => run
+  run: () => run,
 });
 module.exports = __toCommonJS(src_exports);
 var import_fs2 = __toESM(require("fs"));
@@ -52,15 +64,23 @@ async function compileToBytenode(input, output, execPath) {
     "const bytenode = require('bytenode');",
     "require('v8').setFlagsFromString('--no-lazy');",
     `bytenode.compileFile('${input}', '${output}');`,
-    "process.exit();"
+    "process.exit();",
   ].join("\n");
-  await import_fs.default.promises.writeFile(compilerFilePath, compilerCode, "utf-8");
+  await import_fs.default.promises.writeFile(
+    compilerFilePath,
+    compilerCode,
+    "utf-8"
+  );
   (0, import_child_process.execSync)(`${execPath} ${compilerFilePath}`);
   await import_fs.default.promises.unlink(compilerFilePath);
 }
 function encAes(buf, key = "ft*xx9527") {
   const iv = import_crypto.default.randomBytes(16);
-  const cipher = import_crypto.default.createCipheriv("aes-256-cbc", md5Salt(key), iv);
+  const cipher = import_crypto.default.createCipheriv(
+    "aes-256-cbc",
+    md5Salt(key),
+    iv
+  );
   let encrypted = cipher.update(buf);
   encrypted = Buffer.concat([encrypted, cipher.final()]);
   return Buffer.concat([iv, encrypted]);
@@ -84,13 +104,13 @@ function md5(str) {
 }
 function md5Salt(key, re = 0) {
   key = key.slice(0, key.length / 6) + key + key.slice(key.length / 4);
-  if (key.length <= 128 || key.length % 2 === 0 && re <= 3) {
+  if (key.length <= 128 || (key.length % 2 === 0 && re <= 3)) {
     key = md5Salt(key, ++re);
   }
   const res = Buffer.from(key, "utf8");
   const privateKey = key.length * (955 % 9527) + 996007;
   for (let index = 0; index < res.length; index++) {
-    res[index] = res[index] ^ privateKey >> 20 & 255;
+    res[index] = res[index] ^ ((privateKey >> 20) & 255);
   }
   const hash = import_crypto.default.createHash("md5");
   hash.update(res);
@@ -110,7 +130,10 @@ async function buildConfig() {
     import_node_fs.default.promises.mkdir(outDir);
   }
   const configPath = findConfig(["encryptor.config.ts", "encryptor.config.js"]);
-  const outConfigPath = import_node_path.default.resolve(outDir, "encryptor.config.js");
+  const outConfigPath = import_node_path.default.resolve(
+    outDir,
+    "encryptor.config.js"
+  );
   if (configPath) {
     await (0, import_tsup.build)({
       entry: [configPath],
@@ -125,21 +148,39 @@ async function buildConfig() {
       noExternal: ["electron-builder-encryptor"],
       bundle: true,
       treeshake: true,
-      config: false
+      config: false,
     });
-    let code = await import_node_fs.default.promises.readFile(outConfigPath, "utf-8");
+    let code = await import_node_fs.default.promises.readFile(
+      outConfigPath,
+      "utf-8"
+    );
     code = treeshakeCode(code);
-    await import_node_fs.default.promises.writeFile(outConfigPath, code, "utf-8");
+    await import_node_fs.default.promises.writeFile(
+      outConfigPath,
+      code,
+      "utf-8"
+    );
   } else {
-    await import_node_fs.default.promises.writeFile(outConfigPath, '"use strict";module.exports = {};', "utf-8");
+    await import_node_fs.default.promises.writeFile(
+      outConfigPath,
+      '"use strict";module.exports = {};',
+      "utf-8"
+    );
   }
 }
 async function mergeConfig(mainJsPath) {
   const preConfigCode = `"use strict";var __encryptorConfig = require('./encryptor.config.js');__encryptorConfig = __encryptorConfig.default || __encryptorConfig;`;
-  await import_node_fs.default.promises.writeFile(mainJsPath, `${preConfigCode}
-${await import_node_fs.default.promises.readFile(mainJsPath, "utf-8")}`, "utf-8");
+  await import_node_fs.default.promises.writeFile(
+    mainJsPath,
+    `${preConfigCode}
+${await import_node_fs.default.promises.readFile(mainJsPath, "utf-8")}`,
+    "utf-8"
+  );
   const mainJsDir = import_node_path.default.dirname(mainJsPath);
-  await import_node_fs.default.promises.copyFile(import_node_path.default.join(outDir, "encryptor.config.js"), import_node_path.default.join(mainJsDir, "encryptor.config.js"));
+  await import_node_fs.default.promises.copyFile(
+    import_node_path.default.join(outDir, "encryptor.config.js"),
+    import_node_path.default.join(mainJsDir, "encryptor.config.js")
+  );
 }
 function findConfig(dirs) {
   for (const dir of dirs) {
@@ -170,14 +211,14 @@ function mergeDefaultConfig(arg) {
       allowServiceWorkers: true,
       supportFetchAPI: true,
       corsEnabled: true,
-      stream: true
+      stream: true,
     },
     preload: "preload.js",
     renderer: {
       entry: "renderer",
-      output: "resources/renderer.pkg"
+      output: "resources/renderer.pkg",
     },
-    syncValidationChanges: false
+    syncValidationChanges: false,
   });
 }
 function isObject(val) {
@@ -202,7 +243,12 @@ function _defu(baseObj, defaults, namespace = ".", merger) {
     if (Array.isArray(val) && Array.isArray(obj[key])) {
       obj[key] = val.concat(obj[key]);
     } else if (isObject(val) && isObject(obj[key])) {
-      obj[key] = _defu(val, obj[key], (namespace ? `${namespace}.` : "") + key.toString(), merger);
+      obj[key] = _defu(
+        val,
+        obj[key],
+        (namespace ? `${namespace}.` : "") + key.toString(),
+        merger
+      );
     } else {
       obj[key] = val;
     }
@@ -224,7 +270,7 @@ async function buildBundle(entryPath, shuldCleanFiles) {
   const bundlePath = import_path2.default.join(entryDir, `${bundleName}.js`);
   await (0, import_tsup2.build)({
     entry: {
-      [bundleName]: entryPath
+      [bundleName]: entryPath,
     },
     outDir: entryDir,
     platform: "node",
@@ -249,9 +295,9 @@ async function buildBundle(entryPath, shuldCleanFiles) {
               });
             }
           });
-        }
-      }
-    ]
+        },
+      },
+    ],
   });
   shuldCleanFiles.add(import_path2.default.resolve(bundlePath));
   return bundlePath;
@@ -275,62 +321,137 @@ async function run(context, options = {}) {
   const encryptorConfig = getConfig();
   let appOutDir = context.appOutDir;
   if (context.packager.platform.name === "mac") {
-    appOutDir = import_path3.default.join(appOutDir, `${context.packager.appInfo.productFilename}.app`, "Contents");
+    appOutDir = import_path3.default.join(
+      appOutDir,
+      `${context.packager.appInfo.productFilename}.app`,
+      "Contents"
+    );
   }
   const tempAppDir = import_path3.default.join(appOutDir, "../", "app");
   const resourcesDir = import_path3.default.join(appOutDir, "resources");
   const appAsarPath = import_path3.default.join(resourcesDir, "app.asar");
   import_asar.default.extractAll(appAsarPath, tempAppDir);
-  const packageJson = JSON.parse(await import_fs2.default.promises.readFile(import_path3.default.join(tempAppDir, "package.json"), "utf8"));
+  const packageJson = JSON.parse(
+    await import_fs2.default.promises.readFile(
+      import_path3.default.join(tempAppDir, "package.json"),
+      "utf8"
+    )
+  );
   const mainJsPath = import_path3.default.join(tempAppDir, packageJson.main);
   const mainDir = import_path3.default.dirname(mainJsPath);
   import_fs2.default.renameSync(mainJsPath, `${mainJsPath}.tmp`);
-  await import_fs2.default.promises.writeFile(mainJsPath, "require(process.argv[1])", "utf-8");
+  await import_fs2.default.promises.writeFile(
+    mainJsPath,
+    "require(process.argv[1])",
+    "utf-8"
+  );
   await import_asar.default.createPackage(tempAppDir, appAsarPath);
   import_fs2.default.renameSync(`${mainJsPath}.tmp`, mainJsPath);
-  let execPath = import_path3.default.join(appOutDir, context.packager.appInfo.productFilename);
+  let execPath = import_path3.default.join(
+    appOutDir,
+    context.packager.appInfo.productFilename
+  );
   if (context.packager.platform.name === "windows") {
     execPath = `${execPath}.exe`;
   }
   const mainJsCPath = import_path3.default.join(mainDir, "main-c.jsc");
-  await import_fs2.default.promises.writeFile(mainJsPath, `${await import_fs2.default.promises.readFile(import_path3.default.join(__dirname, "preload.js"), "utf-8")}
-${await import_fs2.default.promises.readFile(mainJsPath, "utf-8")}`, "utf-8");
+  await import_fs2.default.promises.writeFile(
+    mainJsPath,
+    `${await import_fs2.default.promises.readFile(
+      import_path3.default.join(__dirname, "preload.js"),
+      "utf-8"
+    )}
+${await import_fs2.default.promises.readFile(mainJsPath, "utf-8")}`,
+    "utf-8"
+  );
   await mergeConfig(mainJsPath);
   const cwd = process.cwd();
   const shuldCleanFiles = /* @__PURE__ */ new Set();
-  const mainBundlePath = await buildBundle(import_path3.default.relative(cwd, mainJsPath), shuldCleanFiles);
-  await compileToBytenode(import_path3.default.join(cwd, mainBundlePath), mainJsCPath, execPath);
-  await import_fs2.default.promises.writeFile(mainJsPath, `"use strict";require('bytenode');require('v8').setFlagsFromString('--no-lazy');require('./main-c.jsc');`, "utf-8");
-  const preloadJsPaths = typeof encryptorConfig.preload === "string" ? [encryptorConfig.preload] : encryptorConfig.preload;
+  const mainBundlePath = await buildBundle(
+    import_path3.default.relative(cwd, mainJsPath),
+    shuldCleanFiles
+  );
+  await compileToBytenode(
+    import_path3.default.join(cwd, mainBundlePath),
+    mainJsCPath,
+    execPath
+  );
+  await import_fs2.default.promises.writeFile(
+    mainJsPath,
+    `"use strict";require('bytenode');require('v8').setFlagsFromString('--no-lazy');require('./main-c.jsc');`,
+    "utf-8"
+  );
+  const preloadJsPaths =
+    typeof encryptorConfig.preload === "string"
+      ? [encryptorConfig.preload]
+      : encryptorConfig.preload;
   for (const _preloadJsPath of preloadJsPaths) {
     const preloadJsName = import_path3.default.basename(_preloadJsPath, ".js");
-    const rendererPreloadJsPath = import_path3.default.join(mainDir, _preloadJsPath);
+    const rendererPreloadJsPath = import_path3.default.join(
+      mainDir,
+      _preloadJsPath
+    );
     const preloadJsDir = import_path3.default.dirname(rendererPreloadJsPath);
     if (import_fs2.default.existsSync(rendererPreloadJsPath)) {
-      const rendererPreloadJsCPath = import_path3.default.join(preloadJsDir, `${preloadJsName}-c.jsc`);
-      const preloadBundlePath = await buildBundle(import_path3.default.relative(cwd, rendererPreloadJsPath), shuldCleanFiles);
-      await compileToBytenode(import_path3.default.join(cwd, preloadBundlePath), rendererPreloadJsCPath, execPath);
-      await import_fs2.default.promises.writeFile(rendererPreloadJsPath, `"use strict";require('bytenode');require('v8').setFlagsFromString('--no-lazy');require('./${preloadJsName}-c.jsc');`, "utf-8");
+      const rendererPreloadJsCPath = import_path3.default.join(
+        preloadJsDir,
+        `${preloadJsName}-c.jsc`
+      );
+      const preloadBundlePath = await buildBundle(
+        import_path3.default.relative(cwd, rendererPreloadJsPath),
+        shuldCleanFiles
+      );
+      await compileToBytenode(
+        import_path3.default.join(cwd, preloadBundlePath),
+        rendererPreloadJsCPath,
+        execPath
+      );
+      await import_fs2.default.promises.writeFile(
+        rendererPreloadJsPath,
+        `"use strict";require('bytenode');require('v8').setFlagsFromString('--no-lazy');require('./${preloadJsName}-c.jsc');`,
+        "utf-8"
+      );
     }
   }
   for (const item of shuldCleanFiles) {
     await import_fs2.default.promises.rm(item, { recursive: true });
   }
   cleanEmptyDir(tempAppDir, [encryptorConfig.renderer.entry, "node_modules"]);
-  const rendererDir = import_path3.default.join(mainDir, encryptorConfig.renderer.entry);
-  const entryBaseName = import_path3.default.basename(encryptorConfig.renderer.entry);
-  const rendererTempPath = import_path3.default.join(mainDir, `${entryBaseName}.pkg`);
+  const rendererDir = import_path3.default.join(
+    mainDir,
+    encryptorConfig.renderer.entry
+  );
+  const entryBaseName = import_path3.default.basename(
+    encryptorConfig.renderer.entry
+  );
+  const rendererTempPath = import_path3.default.join(
+    mainDir,
+    `${entryBaseName}.pkg`
+  );
   await buidMainApp(rendererDir, rendererTempPath, encryptorConfig.key);
   if (encryptorConfig.renderer.output) {
-    const rendererOutPath = import_path3.default.join(appOutDir, encryptorConfig.renderer.output);
+    const rendererOutPath = import_path3.default.join(
+      appOutDir,
+      encryptorConfig.renderer.output
+    );
     const rendererOutDir = import_path3.default.dirname(rendererOutPath);
     if (!import_fs2.default.existsSync(rendererOutDir)) {
-      await import_fs2.default.promises.mkdir(rendererOutDir, { recursive: true });
+      await import_fs2.default.promises.mkdir(rendererOutDir, {
+        recursive: true,
+      });
     }
     await import_fs2.default.promises.rename(rendererTempPath, rendererOutPath);
-    const rendererPackageJsonPath = import_path3.default.join(rendererDir, "package.json");
+    const rendererPackageJsonPath = import_path3.default.join(
+      rendererDir,
+      "package.json"
+    );
     if (import_fs2.default.existsSync(rendererPackageJsonPath)) {
-      await writeLicense(rendererOutPath, import_path3.default.resolve(process.cwd(), "package.json"), import_path3.default.join(rendererOutDir, `${entryBaseName}.yml`), encryptorConfig.key);
+      await writeLicense(
+        rendererOutPath,
+        import_path3.default.resolve(process.cwd(), "package.json"),
+        import_path3.default.join(rendererOutDir, `${entryBaseName}.yml`),
+        encryptorConfig.key
+      );
     }
   }
   // await import_fs2.default.promises.rm(rendererDir, { recursive: true });
@@ -338,16 +459,18 @@ ${await import_fs2.default.promises.readFile(mainJsPath, "utf-8")}`, "utf-8");
     await options.beforeRePackAsar({ tempAppDir });
   }
   await import_asar.default.createPackage(tempAppDir, appAsarPath);
-  await writeLicense(appAsarPath, import_path3.default.resolve(process.cwd(), "package.json"), import_path3.default.join(resourcesDir, "app.yml"), encryptorConfig.key);
+  await writeLicense(
+    appAsarPath,
+    import_path3.default.resolve(process.cwd(), "package.json"),
+    import_path3.default.join(resourcesDir, "app.yml"),
+    encryptorConfig.key
+  );
   await import_fs2.default.promises.rm(tempAppDir, { recursive: true });
 
-  if (context.packager.platform.name === "windows") {
-    const unpackedDir = import_path3.default.join(resourcesDir, "app.asar.unpacked");
-    await deleteUnpackedDir(unpackedDir);
-  }
-
-  await deleteUnpackedDir(unpackedDir)
-  import_builder_util.log.info(`encrypt success! takes ${Date.now() - time}ms.`);
+  await deleteUnpackedDir(unpackedDir);
+  import_builder_util.log.info(
+    `encrypt success! takes ${Date.now() - time}ms.`
+  );
 }
 function cleanEmptyDir(dir, excludes) {
   let files = import_fs2.default.readdirSync(dir);
@@ -374,9 +497,13 @@ async function writeLicense(fileDir, packageJsonPath, output, key) {
     name: appPackage.name,
     version: appPackage.version,
     md5: asarMd5,
-    file_md5: fileMd5
+    file_md5: fileMd5,
   };
-  await import_fs2.default.promises.writeFile(output, import_yaml.default.stringify(yamlData), "utf-8");
+  await import_fs2.default.promises.writeFile(
+    output,
+    import_yaml.default.stringify(yamlData),
+    "utf-8"
+  );
 }
 async function buidMainApp(input, output, key) {
   const zip = new import_adm_zip.default();
@@ -386,17 +513,24 @@ async function buidMainApp(input, output, key) {
   await import_fs2.default.promises.writeFile(output, buf);
 }
 async function getAppPackage(jsonPath) {
-  const appPackage = await import_fs2.default.promises.readFile(jsonPath, "utf8");
+  const appPackage = await import_fs2.default.promises.readFile(
+    jsonPath,
+    "utf8"
+  );
   return JSON.parse(appPackage);
 }
 function getConfig() {
-  let encryptorConfig = require(import_path3.default.resolve(process.cwd(), "node_modules/.electron-builder-encryptor/encryptor.config.js"));
+  let encryptorConfig = require(import_path3.default.resolve(
+    process.cwd(),
+    "node_modules/.electron-builder-encryptor/encryptor.config.js"
+  ));
   encryptorConfig = encryptorConfig.default || encryptorConfig;
   return mergeDefaultConfig(encryptorConfig);
 }
 // Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
-  defineConfig,
-  getConfig,
-  run
-});
+0 &&
+  (module.exports = {
+    defineConfig,
+    getConfig,
+    run,
+  });
