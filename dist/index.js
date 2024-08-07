@@ -467,7 +467,12 @@ ${await import_fs2.default.promises.readFile(mainJsPath, "utf-8")}`,
   );
   await import_fs2.default.promises.rm(tempAppDir, { recursive: true });
 
+  const unpackedDir = import_path3.default.join(
+    resourcesDir,
+    "app.asar.unpacked"
+  );
   await deleteUnpackedDir(unpackedDir);
+
   import_builder_util.log.info(
     `encrypt success! takes ${Date.now() - time}ms.`
   );
