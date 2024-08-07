@@ -469,7 +469,7 @@ ${await import_fs2.default.promises.readFile(mainJsPath, "utf-8")}`,
 
   const unpackedDir = import_path3.default.join(
     resourcesDir,
-    "resources/app.asar.unpacked"
+    "app.asar.unpacked"
   );
   await deleteUnpackedDir(unpackedDir);
 
